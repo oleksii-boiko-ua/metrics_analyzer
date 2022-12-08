@@ -36,3 +36,31 @@ Now you should be able to run the following script:
 
 
     $ metrics_analyzer metrics-to-whitelist
+
+
+Output example:
+
+```yaml
+We can whitelist 10 metrics from the job argocd-metrics
+
+process_cpu_seconds_total|ALERTS|go_goroutines|workqueue_depth|process_start_time_seconds|process_resident_memory_bytes|workqueue_adds_total|up|argocd_app_info|workqueue_queue_duration_seconds_bucket
+
+
+We can whitelist 55 metrics from the job kube-state-metrics
+
+kube_job_status_start_time|kube_deployment_status_replicas|kube_statefulset_status_replicas_ready|kube_pod_container_resource_requests|kube_node_spec_taint|kube_namespace_created|kube_node_status_allocatable|kube_pod_container_resource_limits|kube_deployment_labels|kube_node_info
+
+
+We can whitelist 10 metrics from the job prometheus-grafana
+
+process_cpu_seconds_total|grafana_http_request_duration_seconds_bucket|go_goroutines|process_start_time_seconds|grafana_build_info|process_resident_memory_bytes|grafana_http_request_duration_seconds_sum|grafana_stat_totals_dashboard|up|grafana_http_request_duration_seconds_count
+```
+
+example of metric relabelings for service monitor to whitelist recomended metrics
+
+```yaml
+metricRelabelings:
+  - action: keep
+    regex: 'process_cpu_seconds_total|go_goroutines|prometheus_operator_watch_operations_total'
+    sourceLabels: [__name__]
+```
