@@ -233,8 +233,11 @@ def get_list_of_job(url=None):
 
 def get_grafana_dashboards_metrics(grafana_url, grafana_key):
     dashboards = get_dashboards(grafana_url, grafana_key)
-    grafana_metrics = extract_metrics(data=dashboards, key='expr')
+    grafana_dashboards_metrics = extract_metrics(data=dashboards, key='expr')
+    grafana_vars_metrics = extract_metrics(data=dashboards, key='query')
+    grafana_metrics = grafana_dashboards_metrics + grafana_vars_metrics
     return grafana_metrics
+
 
 def get_rules_metrics(url=None):
     rules = get_rules(url)
@@ -254,7 +257,16 @@ def extract_metrics_to_whitelist(jobs=None, grafana_metrics=None):
         common_metrics = set(grafana_metrics).intersection(set(jobs[job]))
         print(f"\nWe can whitelist {len(list(common_metrics))} metrics from the job {job}\n")
         print(to_regex(common_metrics))
-    
+      
+def missing_dashboard_metrics(jobs=None, grafana_metrics=None):
+    logger.info("Get missing dashboards metrics")
+    missing_metrics = []
+    job_metrics = str([val for val in jobs.values()])
+    for metric in grafana_metrics:
+        if metric not in job_metrics:
+            missing_metrics.append(metric)
+    return missing_metrics
+            
 
 def parse_recursively(search_dict, field):
     """
@@ -265,7 +277,7 @@ def parse_recursively(search_dict, field):
 
     for key, value in search_dict.items():
 
-        if key == field:
+        if key == field and not isinstance(value, dict):
             fields_found.append(value)
 
         elif isinstance(value, dict):
@@ -365,7 +377,7 @@ def main(args=None):
         case 'metrics-per-job':
             print("METRICS_PER_JOB:\n", get_metrics_per_job(args.prometheus_url))
         case 'missing-dashboard-metrics':
-            print('todo')
+            print(missing_dashboard_metrics(get_metrics_per_job(args.prometheus_url), list(set(get_grafana_dashboards_metrics(args.grafana_url, args.grafana_key) + get_rules_metrics(args.prometheus_url)))))
     
 
 if __name__ == '__main__':
